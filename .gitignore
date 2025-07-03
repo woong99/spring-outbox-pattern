@@ -355,3 +355,5 @@ gradle-app.setting
 *.hprof
 
 # End of https://www.toptal.com/developers/gitignore/api/macos,gradle,intellij,intellij+iml,intellij+all,windows,java,kotlin
+
+/docker/**
