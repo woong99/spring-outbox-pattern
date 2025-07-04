@@ -10,6 +10,6 @@ class OrderProducer(
     fun sendOrderMessage(
         message: Any
     ) {
-        kafkaTemplate.send("order", message).get()
+        kafkaTemplate.send("CREATE-ORDER", message).get()
     }
 }

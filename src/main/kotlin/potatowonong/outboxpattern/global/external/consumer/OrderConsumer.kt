@@ -9,7 +9,7 @@ class OrderConsumer() {
 
     private val log = KotlinLogging.logger { }
 
-    @KafkaListener(topics = ["order"], groupId = "outbox-pattern-group")
+    @KafkaListener(topics = ["CREATE-ORDER"], groupId = "outbox-pattern-group")
     fun orderListener(
         message: String
     ) {

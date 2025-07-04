@@ -14,8 +14,15 @@ class OrderController(
 
     @PostMapping("/{productId}")
     fun createOrder(
-       @PathVariable productId: Long
+        @PathVariable productId: Long
     ) {
         orderService.createOrder(productId)
+    }
+
+    @PostMapping("/{productId}/outbox-pattern")
+    fun createOrderWithOutboxPattern(
+        @PathVariable productId: Long
+    ) {
+        orderService.createOrderWithOutboxPattern(productId)
     }
 }
