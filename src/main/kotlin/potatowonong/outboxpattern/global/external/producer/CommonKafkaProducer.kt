@@ -20,7 +20,7 @@ class CommonKafkaProducer(
             .whenComplete { result, ex ->
                 if (ex == null) {
                     // 이벤트 발송 성공
-//                    eventStatusUpdater.markAsSent(outboxEvent)
+                    eventStatusUpdater.markAsSent(outboxEvent)
                 } else {
                     // 이벤트 발송 실패
                     eventStatusUpdater.markAsFailed(outboxEvent)
