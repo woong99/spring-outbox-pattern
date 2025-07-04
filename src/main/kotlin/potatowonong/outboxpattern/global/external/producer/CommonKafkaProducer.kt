@@ -16,11 +16,11 @@ class CommonKafkaProducer(
     fun sendOrderMessage(
         outboxEvent: OutboxEvent
     ) {
-        kafkaTemplate.send(outboxEvent.topic, outboxEvent.payload)
+        kafkaTemplate.send(outboxEvent.topic, outboxEvent.aggregateId, outboxEvent.payload)
             .whenComplete { result, ex ->
                 if (ex == null) {
                     // 이벤트 발송 성공
-                    eventStatusUpdater.markAsSent(outboxEvent)
+//                    eventStatusUpdater.markAsSent(outboxEvent)
                 } else {
                     // 이벤트 발송 실패
                     eventStatusUpdater.markAsFailed(outboxEvent)

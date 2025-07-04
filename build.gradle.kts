@@ -49,6 +49,9 @@ dependencies {
     // Kafka
     implementation("org.springframework.kafka:spring-kafka")
 
+    // Redis
+    implementation("org.springframework.boot:spring-boot-starter-data-redis")
+
     // MySQL
     runtimeOnly("com.mysql:mysql-connector-j")
 
