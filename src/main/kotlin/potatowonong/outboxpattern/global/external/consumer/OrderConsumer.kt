@@ -14,7 +14,7 @@ class OrderConsumer(
 
     private val log = KotlinLogging.logger { }
 
-    @KafkaListener(topics = ["CREATE-ORDER"], groupId = "outbox-pattern-group")
+    @KafkaListener(topics = ["outbox.event.ORDER"], groupId = "outbox-pattern-group")
     fun orderListener(
         message: String,
         @Header("kafka_receivedMessageKey") key: String

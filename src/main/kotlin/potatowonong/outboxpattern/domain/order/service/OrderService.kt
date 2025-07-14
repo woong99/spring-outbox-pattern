@@ -33,7 +33,8 @@ class OrderService(
 
     @Transactional
     fun createOrderWithOutboxPattern(
-        productId: Long
+        productId: Long,
+        payload: String
     ) {
         // 상품 정보 조회
         val product = productRepository.findByIdOrNull(productId)
@@ -42,7 +43,7 @@ class OrderService(
         // 주문 기록 생성(Outbox)
         outboxEventRepository.save(
             OutboxEvent.createOrder(
-                payload = product.id!!.toString(),
+                payload = payload,
                 aggregateId = UUID.randomUUID().toString(),
             )
         )

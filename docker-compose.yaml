@@ -6,26 +6,81 @@ services:
       MYSQL_ROOT_PASSWORD: 1234
       MYSQL_DATABASE: outbox_pattern
     ports:
-      - "33306:3306"
+      - "3306:3306"
+    command:
+      [
+        "--server-id=1",
+        "--binlog-format=ROW",
+        "--binlog-row-image=FULL",
+        "--log-bin=/var/lib/mysql/mysql-bin.log",
+        "--binlog_expire_logs_seconds=604800"
+      ]
     volumes:
       - ./docker/mysql:/var/lib/mysql
+    networks:
+      - outbox_pattern
+
+  zookeeper:
+    container_name: zookeeper
+    image: debezium/zookeeper:2.7.3.Final
+    ports:
+      - "2181:2181"
+      - "2888:2888"
+      - "3888:3888"
+    networks:
+      - outbox_pattern
 
   kafka:
-    image: bitnami/kafka:latest
+    image: debezium/kafka:2.7.3.Final
     container_name: kafka
     environment:
-      KAFKA_CFG_NODE_ID: 1
-      KAFKA_CFG_PROCESS_ROLES: broker,controller
-      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
-      KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
-      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
-      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_CFG_LOG_DIRS: /bitnami/kafka/data
-      ALLOW_PLAINTEXT_LISTENER: 'yes'
+      - ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:19092,EXTERNAL://0.0.0.0:9092 # 어떤 주소와 포트에서 클라이언트 연결을 수신할지 설정
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:19092,EXTERNAL://localhost:9092 # 클러스터 외부에서 브로커에 접속할 때 브로커가 자신을 어떤 주소로 노출할지 설정
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
     ports:
       - "9092:9092"
     volumes:
-      - ./docker/kafka:/bitnami/kafka
+      - ./docker/kafka:/debezium/kafka
+    depends_on:
+      - zookeeper
+    links:
+      - zookeeper:zookeeper
+    networks:
+      - outbox_pattern
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    ports:
+      - "9090:8080"
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=outbox-pattern
+      - KAFKA_CLUSTERS_0_BOOTSTRAP_SERVERS=kafka:19092
+    depends_on:
+      - kafka
+    networks:
+      - outbox_pattern
+
+  connect:
+    container_name: connect
+    image: debezium/connect:3.0.0.Final
+    depends_on:
+      - kafka
+      - mysql
+    links:
+      - kafka:kafka
+      - mysql:mysql
+    ports:
+      - "8083:8083"
+    environment:
+      - BOOTSTRAP_SERVERS=kafka:19092
+      - GROUP_ID=1
+      - CONFIG_STORAGE_TOPIC=my_connect_configs
+      - OFFSET_STORAGE_TOPIC=my_connect_offsets
+      - STATUS_STORAGE_TOPIC=my_connect_statuses
+    networks:
+      - outbox_pattern
 
   redis:
     image: redis:latest
@@ -34,3 +89,9 @@ services:
       - "6379:6379"
     volumes:
       - ./docker/redis:/data
+    networks:
+      - outbox_pattern
+
+networks:
+  outbox_pattern:
+    external: true
